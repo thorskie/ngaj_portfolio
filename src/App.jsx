@@ -26,7 +26,7 @@ const skills = [
   {
     icon: Code2,
     title: 'Software & databases',
-    items: ['Software development lifecycle', 'PHP', 'MySQL / MariaDB', 'API integration'],
+    items: ['Software development lifecycle', 'PHP', 'React.js', 'Codeigniter', 'Laravel', 'MySQL / MariaDB', 'API integration'],
   },
   {
     icon: Server,
