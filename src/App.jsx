@@ -216,6 +216,7 @@ function PortfolioHome() {
               <h2 id="contact-title">Let’s make <em>work better.</em></h2>
               <div className="contact__aside">
                 <p>For professional inquiries, use a contact channel you have chosen to share publicly.</p>
+                <a className="button button--lime" href="mailto:nestor.arcebuche.jr@gmail.com?subject=Portfolio%20inquiry">Contact me <ArrowUpRight size={15} /></a>
               </div>
             </div>
           </div>
