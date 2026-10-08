@@ -1,266 +1,221 @@
 import { useState } from 'react'
 import {
   ArrowDown,
-  ArrowDownRight,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   Check,
   Code2,
-  Database,
-  GitBranch,
-  Globe2,
+  GraduationCap,
   Menu,
   Network,
   Server,
   ShieldCheck,
+  Workflow,
   X,
 } from 'lucide-react'
 import AdminPage from './AdminPage.jsx'
 import { loadProjects } from './projectStore.js'
 
-const projects = [
+const skills = [
   {
-    number: '01',
-    title: 'Learning platform, built to stay available',
-    category: 'Infrastructure',
-    description:
-      'Infrastructure and operations work for a learning environment serving a large academic community.',
-    technologies: ['Moodle', 'Linux', 'Nginx', 'Monitoring'],
-    image:
-      'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'Rows of server equipment in a data center',
-    tone: 'project-image--green',
-  },
-  {
-    number: '02',
-    title: 'Workflows that move at the speed of work',
-    category: 'Web systems',
-    description:
-      'Enterprise portals and workflow tools designed to bring scattered processes into a clearer digital flow.',
-    technologies: ['PHP', 'MySQL', 'JavaScript', 'API integration'],
-    image:
-      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'A team collaborating around a laptop',
-    tone: 'project-image--blue',
-  },
-  {
-    number: '03',
-    title: 'Operational reporting, made more useful',
-    category: 'Automation',
-    description:
-      'Reporting and integration work that helps teams get a more timely view of operational information.',
-    technologies: ['Oracle', 'SQL', 'Reporting', 'Integration'],
-    image:
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=85',
-    imageAlt: 'Colorful data visualization on a computer screen',
-    tone: 'project-image--orange',
-  },
-]
-
-const skillGroups = [
-  {
-    icon: Network,
-    number: '01',
-    title: 'Leadership & operations',
-    skills: ['IT service delivery', 'Project management', 'MIS governance', 'Vendor coordination'],
+    icon: Workflow,
+    title: 'IT leadership & operations',
+    items: ['MIS governance', 'Strategic planning', 'Project management', 'Vendor & stakeholder management'],
   },
   {
     icon: Code2,
-    number: '02',
-    title: 'Software & data',
-    skills: ['PHP', 'MySQL / MariaDB', 'SDLC', 'API integration', 'Git'],
+    title: 'Software & databases',
+    items: ['Software development lifecycle', 'PHP', 'MySQL / MariaDB', 'API integration'],
   },
   {
     icon: Server,
-    number: '03',
     title: 'Systems & infrastructure',
-    skills: ['Linux & Windows Server', 'Nginx', 'Apache', 'Cloudflare', 'SSL / TLS'],
+    items: ['Linux and Windows Server', 'Apache and Nginx', 'SSL / TLS', 'Cloudflare'],
   },
   {
     icon: ShieldCheck,
-    number: '04',
     title: 'Security & continuity',
-    skills: ['Security hardening', 'Backup & recovery', 'Monitoring', 'Risk assessment'],
+    items: ['Security hardening', 'Backup and recovery', 'System monitoring', 'Risk assessment'],
   },
 ]
 
-function SectionHeading({ index, eyebrow, title, children }) {
+const approachItems = [
+  'Reliable infrastructure and service delivery',
+  'Practical software shaped around real workflows',
+  'Security and continuity built into operations',
+]
+
+function ProjectCard({ project, total }) {
   return (
-    <div className="section-heading">
-      <div className="section-heading__meta">
-        <span className="mono">{index}</span>
-        <span className="section-heading__eyebrow">{eyebrow}</span>
+    <article className="project-card">
+      <div className={`project-card__image ${project.tone || ''}`}>
+        {project.image && <img src={project.image} alt={project.imageAlt || project.title} loading="lazy" />}
+        <span className="project-card__number mono">{project.number} / {String(total).padStart(2, '0')}</span>
+        <span className="project-card__category">{project.category}</span>
       </div>
-      <div className="section-heading__main">
-        <h2>{title}</h2>
-        {children}
+      <div className="project-card__body">
+        <h3>{project.title}</h3>
+        <p>{project.description}</p>
+        <div className="tag-list" aria-label="Technologies">
+          {(project.technologies || []).map((technology) => <span key={technology}>{technology}</span>)}
+        </div>
+        {project.url ? (
+          <a className="project-card__link" href={project.url} target="_blank" rel="noreferrer">
+            <span>VIEW PROJECT</span><ArrowUpRight size={14} aria-hidden="true" />
+          </a>
+        ) : (
+          <div className="project-card__note"><span>CAPABILITY AREA</span><ArrowUpRight size={14} aria-hidden="true" /></div>
+        )}
       </div>
-    </div>
+    </article>
   )
 }
 
-function App() {
-  const isAdminPage = window.location.pathname.replace(/\/$/, '') === '/admin'
-  const [activeFilter, setActiveFilter] = useState('All work')
-  const [menuOpen, setMenuOpen] = useState(false)
+export default function App() {
+  if (window.location.pathname.startsWith('/admin')) return <AdminPage />
+
+  return <PortfolioHome />
+}
+
+function PortfolioHome() {
   const [projects] = useState(loadProjects)
-  const publishedProjects = projects.filter((project) => project.published !== false)
-  const filters = ['All work', ...new Set(publishedProjects.map((project) => project.category))]
-  const visibleProjects =
-    activeFilter === 'All work'
-      ? publishedProjects
-      : publishedProjects.filter((project) => project.category === activeFilter)
+  const [activeCategory, setActiveCategory] = useState('All')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const publishedProjects = projects.filter((project) => project.published)
+  const categories = ['All', ...new Set(publishedProjects.map((project) => project.category).filter(Boolean))]
+  const visibleProjects = publishedProjects.filter((project) => activeCategory === 'All' || project.category === activeCategory)
 
-  const closeMenu = () => setMenuOpen(false)
-
-  if (isAdminPage) return <AdminPage />
+  function closeMenu() {
+    setMenuOpen(false)
+  }
 
   return (
     <>
       <header className="site-header">
-        <a className="wordmark" href="#home" onClick={closeMenu} aria-label="Nestor Arcebuche, home">
+        <a className="wordmark" href="#top" aria-label="Nestor Arcebuche home">
           <span className="wordmark__mark">NA</span>
-          <span className="wordmark__name">Nestor Arcebuche<span> Jr.</span></span>
+          <span className="wordmark__name">NESTOR ARCEBUCHE <span>JR.</span></span>
         </a>
-        <button
-          className="menu-toggle icon-button"
-          type="button"
-          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+        <button className="menu-toggle icon-button" type="button" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
         <nav className={`main-nav${menuOpen ? ' main-nav--open' : ''}`} aria-label="Main navigation">
           <a href="#about" onClick={closeMenu}>About</a>
           <a href="#expertise" onClick={closeMenu}>Expertise</a>
           <a href="#projects" onClick={closeMenu}>Projects</a>
           <a href="#education" onClick={closeMenu}>Education</a>
-          <a className="nav-contact" href="#contact" onClick={closeMenu}>Get in touch <ArrowUpRight size={14} /></a>
+          <a className="nav-contact" href="#contact" onClick={closeMenu}>Contact <ArrowUpRight size={14} /></a>
         </nav>
       </header>
 
-      <main>
-        <section className="hero" id="home">
-          <div className="hero__photo" role="img" aria-label="Illuminated server racks in a data center" />
-          <div className="hero__scrim" />
+      <main id="top">
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero__photo" aria-hidden="true" />
+          <div className="hero__scrim" aria-hidden="true" />
           <div className="hero__content">
-            <p className="hero__eyebrow"><span className="status-dot" /> IT LEADERSHIP / SYSTEMS / SOFTWARE</p>
-            <h1>Nestor G.<br /><em>Arcebuche Jr.</em></h1>
+            <p className="hero__eyebrow mono"><span className="status-dot" /> IT OPERATIONS · SOFTWARE · INFRASTRUCTURE</p>
+            <h1 id="hero-title">Technology that <em>keeps work moving.</em></h1>
             <div className="hero__bottom">
-              <p className="hero__summary">I lead technology operations and build systems that help people do their best work.</p>
+              <p className="hero__summary">IT leader and systems professional with 15+ years across infrastructure, software development, and enterprise technology.</p>
               <div className="hero__actions">
-                <a className="button button--lime" href="#projects">Explore selected work <ArrowDownRight size={17} /></a>
-                <a className="hero__text-link" href="#about">A little about me <ArrowDown size={15} /></a>
+                <a className="button button--lime" href="#projects">Explore selected work <ArrowRight size={15} /></a>
+                <a className="hero__text-link" href="#about">Meet Nestor <ArrowDown size={14} /></a>
               </div>
             </div>
           </div>
-          <div className="hero__caption mono"><span>BASED IN THE PHILIPPINES</span><span>15+ YEARS IN TECHNOLOGY</span></div>
-          <a className="hero__scroll" href="#about" aria-label="Scroll to about section"><ArrowDown size={17} /></a>
+          <div className="hero__caption mono"><span>IT LEADERSHIP / SYSTEMS ADMINISTRATION</span><span>15+ YEARS IN TECHNOLOGY</span></div>
+          <a className="hero__scroll" href="#about" aria-label="Scroll to about section"><ArrowDown size={16} /></a>
         </section>
 
-        <section className="intro section-pad" id="about">
-          <div className="intro__label mono">A PRACTICAL, PEOPLE-FIRST APPROACH</div>
+        <section className="intro section-pad" id="about" aria-labelledby="about-title">
+          <div className="intro__label mono">01 / PROFILE</div>
           <div className="intro__body">
-            <p className="intro__lead">Technology should make important work <span>clearer, steadier, and more useful.</span></p>
+            <h2 className="intro__lead" id="about-title">Connecting people, systems, and technology to make essential work more dependable.</h2>
             <div className="intro__details">
-              <p>I'm an IT leader with 15+ years across infrastructure, software development, enterprise systems, and education technology. I bring teams and technology together, from the first system decision through reliable day-to-day operations.</p>
-              <p>This portfolio is about the work itself: the systems shaped, the problems untangled, and the technical foundations that keep services moving.</p>
-              <a className="inline-link" href="#expertise">How I work <ArrowRight size={15} /></a>
+              <p>My work spans IT operations, software development leadership, learning platforms, and enterprise systems. I focus on reliable services, clear processes, and technology initiatives that support real organizational needs.</p>
+              <a className="inline-link" href="#expertise">Explore core expertise <ArrowRight size={14} /></a>
             </div>
           </div>
         </section>
 
-        <section className="expertise section-pad" id="expertise">
-          <SectionHeading index="01" eyebrow="CAPABILITIES" title={<>A broad toolkit.<br /><span>One connected practice.</span></>}>
-            <p className="section-heading__note">From planning and delivery to the infrastructure beneath it, I work across the full technology picture.</p>
-          </SectionHeading>
+        <section className="expertise section-pad" id="expertise" aria-labelledby="expertise-title">
+          <div className="section-heading">
+            <div className="section-heading__meta"><span className="mono">02</span><span className="section-heading__eyebrow">CORE EXPERTISE</span></div>
+            <div className="section-heading__main">
+              <h2 id="expertise-title">A broad view of <span>technology.</span></h2>
+              <p className="section-heading__note">Leadership and hands-on technical work, connected by an operational mindset.</p>
+            </div>
+          </div>
           <div className="skill-grid">
-            {skillGroups.map(({ icon: Icon, number, title, skills }) => (
-              <article className="skill-item" key={number}>
-                <div className="skill-item__top"><span className="mono">{number}</span><Icon size={21} strokeWidth={1.6} /></div>
+            {skills.map(({ icon: Icon, title, items }, index) => (
+              <article className="skill-item" key={title}>
+                <div className="skill-item__top"><Icon size={19} /><span className="mono">0{index + 1}</span></div>
                 <h3>{title}</h3>
-                <ul>{skills.map((skill) => <li key={skill}><Check size={13} />{skill}</li>)}</ul>
+                <ul>{items.map((item) => <li key={item}><Check size={13} aria-hidden="true" />{item}</li>)}</ul>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="projects section-pad" id="projects">
-          <SectionHeading index="02" eyebrow="SELECTED WORK" title={<>Good work leaves<br /><span>systems better.</span></>}>
-            <p className="section-heading__note">A selection of the systems and technical initiatives that reflect my work across software, infrastructure, and operations.</p>
-          </SectionHeading>
+        <section className="projects section-pad" id="projects" aria-labelledby="projects-title">
+          <div className="section-heading">
+            <div className="section-heading__meta"><span className="mono">03</span><span className="section-heading__eyebrow">SELECTED WORK</span></div>
+            <div className="section-heading__main">
+              <h2 id="projects-title">Systems built for <span>real work.</span></h2>
+              <p className="section-heading__note">A selection of infrastructure, web systems, and operational improvements.</p>
+            </div>
+          </div>
           <div className="project-toolbar">
-            <div className="filter-list" role="group" aria-label="Filter projects by category">
-              {filters.map((filter) => (
-                <button
-                  className={`filter-button${activeFilter === filter ? ' filter-button--active' : ''}`}
-                  key={filter}
-                  type="button"
-                  aria-pressed={activeFilter === filter}
-                  onClick={() => setActiveFilter(filter)}
-                >{filter}</button>
+            <div className="filter-list" aria-label="Filter projects">
+              {categories.map((category) => (
+                <button className={`filter-button${activeCategory === category ? ' filter-button--active' : ''}`} key={category} type="button" aria-pressed={activeCategory === category} onClick={() => setActiveCategory(category)}>{category}</button>
               ))}
             </div>
-            <span className="mono project-count">{String(visibleProjects.length).padStart(2, '0')} SELECTED</span>
+            <span className="project-count mono">{String(visibleProjects.length).padStart(2, '0')} PROJECTS</span>
           </div>
-          <div className="project-grid" aria-live="polite">
-            {visibleProjects.map((project, index) => (
-              <article className="project-card" key={project.id || project.number}>
-                <div className={`project-card__image ${project.tone}`}>
-                  <img src={project.image} alt={project.imageAlt} loading="lazy" />
-                  <span className="project-card__number mono">{String(index + 1).padStart(2, '0')} / {String(visibleProjects.length).padStart(2, '0')}</span>
-                  <span className="project-card__category">{project.category}</span>
-                </div>
-                <div className="project-card__body">
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <div className="tag-list">{project.technologies.map((technology) => <span key={technology}>{technology}</span>)}</div>
-                  {project.url ? <a className="project-card__link mono" href={project.url} target="_blank" rel="noreferrer">OPEN PROJECT <ArrowUpRight size={13} /></a> : <span className="project-card__note mono">CAPABILITY AREA <ArrowUpRight size={13} /></span>}
-                </div>
-              </article>
-            ))}
+          <div className="project-grid">
+            {visibleProjects.length ? visibleProjects.map((project) => <ProjectCard key={project.id || project.number} project={project} total={publishedProjects.length} />) : <p className="project-state">No published projects in this category yet.</p>}
           </div>
-          <div className="project-disclaimer"><Database size={15} /><p>Project examples are intentionally generalized. Specific project details are shared only when they are appropriate for public use.</p></div>
         </section>
 
-        <section className="approach section-pad">
+        <section className="approach section-pad" aria-labelledby="approach-title">
           <div className="approach__visual">
-            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1500&q=85" alt="Earth at night with connected city lights" loading="lazy" />
-            <span className="approach__image-label mono"><Globe2 size={14} /> SYSTEMS THAT CONNECT</span>
+            <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=85" alt="Close view of electronic components on a circuit board" loading="lazy" />
+            <span className="approach__image-label mono"><Network size={15} /> CONNECTED SYSTEMS, CONSIDERED OPERATIONS</span>
           </div>
           <div className="approach__copy">
-            <div className="section-heading__meta"><span className="mono">03</span><span className="section-heading__eyebrow">THE THROUGH-LINE</span></div>
-            <h2>Make the complex<br />feel <span>manageable.</span></h2>
-            <p>Good technology work is rarely one thing. It takes sound architecture, thoughtful delivery, secure operations, and a clear understanding of the people relying on the result.</p>
+            <div className="section-heading__meta"><span className="mono">04</span><span className="section-heading__eyebrow">HOW I WORK</span></div>
+            <h2 id="approach-title">Good technology <span>works quietly.</span></h2>
+            <p>Strong systems are dependable, understandable, and built around the people who use them. I bring operational discipline to delivery, improvement, and long-term support.</p>
             <div className="approach__list">
-              <div><GitBranch size={17} /><span>Connect strategy to execution</span><ArrowUpRight size={14} /></div>
-              <div><Server size={17} /><span>Build for reliable operations</span><ArrowUpRight size={14} /></div>
-              <div><ShieldCheck size={17} /><span>Keep security in the design</span><ArrowUpRight size={14} /></div>
+              {approachItems.map((item) => <div key={item}><Check size={15} /><span>{item}</span><ArrowRight size={14} /></div>)}
             </div>
           </div>
         </section>
 
-        <section className="education section-pad" id="education">
-          <SectionHeading index="04" eyebrow="FOUNDATIONS" title={<>Built on a curious<br /><span>engineering mindset.</span></>}>
-            <p className="section-heading__note">A foundation in engineering, carried into a career of practical problem-solving.</p>
-          </SectionHeading>
-          <div className="education-record">
-            <span className="education-record__icon"><Code2 size={21} /></span>
+        <section className="education section-pad" id="education" aria-labelledby="education-title">
+          <div className="section-heading">
+            <div className="section-heading__meta"><span className="mono">05</span><span className="section-heading__eyebrow">EDUCATION</span></div>
+            <div className="section-heading__main">
+              <h2 id="education-title">A foundation in <span>engineering.</span></h2>
+              <p className="section-heading__note">Formal study grounded in systems thinking and practical problem-solving.</p>
+            </div>
+          </div>
+          <article className="education-record">
+            <div className="education-record__icon"><GraduationCap size={20} /></div>
             <div><h3>Bachelor of Science in Computer Engineering</h3><p>TRACE College Los Baños</p></div>
             <span className="education-record__year mono">2006 — 2011</span>
-          </div>
+          </article>
         </section>
 
-        <section className="contact" id="contact">
+        <section className="contact" id="contact" aria-labelledby="contact-title">
           <div className="contact__inner">
-            <div className="section-heading__meta"><span className="mono">05</span><span className="section-heading__eyebrow">CONTACT</span></div>
+            <div className="section-heading__meta"><span className="mono">06</span><span className="section-heading__eyebrow">CONTACT</span></div>
             <div className="contact__content">
-              <h2>Have a good<br /><em>challenge?</em></h2>
+              <h2 id="contact-title">Let’s make <em>work better.</em></h2>
               <div className="contact__aside">
-                <p>For thoughtful conversations about systems, technology operations, and the work ahead.</p>
-                <a className="button button--lime" href="mailto:hello@nestorarcebuche.com">Start a conversation <ArrowUpRight size={17} /></a>
-                <span className="contact__email-note mono">UPDATE THIS ADDRESS BEFORE PUBLISHING</span>
+                <p>For professional inquiries, use a contact channel you have chosen to share publicly.</p>
               </div>
             </div>
           </div>
@@ -268,14 +223,13 @@ function App() {
       </main>
 
       <footer className="site-footer">
-        <a className="wordmark wordmark--footer" href="#home"><span className="wordmark__mark">NA</span><span className="wordmark__name">Nestor Arcebuche<span> Jr.</span></span></a>
-        <span className="site-footer__note">IT leadership, systems & software</span>
-        <a className="site-footer__top mono" href="#home">BACK TO TOP <ArrowUpRight size={13} /></a>
-        <span className="site-footer__copyright mono">© {new Date().getFullYear()} NESTOR G. ARCEBUCHE JR.</span>
-        <a className="site-footer__admin mono" href="/admin">ADMIN <ArrowUpRight size={13} /></a>
+        <a className="wordmark wordmark--footer" href="#top" aria-label="Back to top">
+          <span className="wordmark__mark">NA</span><span className="wordmark__name">NESTOR ARCEBUCHE <span>JR.</span></span>
+        </a>
+        <span className="site-footer__note">IT leadership, systems, and software.</span>
+        <a className="site-footer__top" href="#top">BACK TO TOP <ArrowUp size={13} /></a>
+        <span className="site-footer__copyright">© {new Date().getFullYear()} Nestor G. Arcebuche Jr.</span>
       </footer>
     </>
   )
 }
-
-export default App
