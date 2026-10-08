@@ -79,6 +79,9 @@ button { color: inherit; }
 .skill-item { min-height: 238px; padding: 21px 19px 24px; border-right: 1px solid #c5c9bc; }
 .skill-item:first-child { border-left: 1px solid #c5c9bc; }
 .skill-item__top { display: flex; align-items: center; justify-content: space-between; color: #667356; }
+.skill-item__top > svg {
+  color: #13703a;;
+}
 .skill-item__top .mono { font-size: 9px; }
 .skill-item h3 { min-height: 43px; margin: 29px 0 15px; font: 700 15px/1.3 var(--display); }
 .skill-item ul { display: grid; gap: 9px; margin: 0; padding: 0; color: #62675e; list-style: none; font-size: 11px; }
